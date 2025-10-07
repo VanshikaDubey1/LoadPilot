@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { handleCheckExternalWebsite, type CheckWebsiteState } from "@/lib/actions";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -32,7 +33,7 @@ const statusConfig = {
 
 
 export function ExternalHealthCheckCard() {
-    const [state, formAction] = useFormState(handleCheckExternalWebsite, initialState);
+    const [state, formAction] = useActionState(handleCheckExternalWebsite, initialState);
     const { toast } = useToast();
 
     useEffect(() => {
