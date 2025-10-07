@@ -1,22 +1,14 @@
+
 "use client";
 
 import { useInterval } from "@/hooks/use-interval";
-import type { TimeSeriesData, Server, Alert } from "@/lib/types";
-import { useState } from "react";
+import type { Server, Alert } from "@/lib/types";
+import { useEffect, useState } from "react";
 import { ChartCard, MetricCard } from "./metric-card";
 import { ServerStatus } from "./server-status";
 import { AlertList } from "./alert-list";
 import { HealthCheckCard } from "./health-check-card";
-
-const initialRequestData = Array.from({ length: 20 }, (_, i) => ({
-  time: `${i}`,
-  value: Math.floor(Math.random() * (1200 - 800 + 1) + 800),
-}));
-
-const initialErrorData = Array.from({ length: 20 }, (_, i) => ({
-  time: `${i}`,
-  value: Math.random() * 2,
-}));
+import { Skeleton } from "@/components/ui/skeleton";
 
 const initialServers: Server[] = [
   { id: 'srv-1', name: 'web-1-us-east', ip: '192.168.1.10', region: 'us-east-1', status: 'online', cpuUsage: 34, memoryUsage: 58 },
@@ -34,14 +26,31 @@ const initialAlerts: Alert[] = [
 
 
 export default function DashboardPage() {
-  const [requestRate, setRequestRate] = useState(initialRequestData);
-  const [errorRate, setErrorRate] = useState(initialErrorData);
-  const [latency, setLatency] = useState(120);
+  const [isMounted, setIsMounted] = useState(false);
+  const [requestRate, setRequestRate] = useState<{ time: string; value: number }[]>([]);
+  const [errorRate, setErrorRate] = useState<{ time: string; value: number }[]>([]);
+  const [latency, setLatency] = useState(0);
   const [servers, setServers] = useState<Server[]>(initialServers);
 
+  useEffect(() => {
+    const initialRequestData = Array.from({ length: 20 }, (_, i) => ({
+        time: `${i}`,
+        value: Math.floor(Math.random() * (1200 - 800 + 1) + 800),
+      }));
+      const initialErrorData = Array.from({ length: 20 }, (_, i) => ({
+        time: `${i}`,
+        value: Math.random() * 2,
+      }));
+    setRequestRate(initialRequestData);
+    setErrorRate(initialErrorData);
+    setLatency(Math.floor(Math.random() * (250 - 50 + 1) + 50));
+    setIsMounted(true);
+  }, []);
+
   useInterval(() => {
-    setRequestRate((prev) => [...prev.slice(1), { time: `${parseInt(prev[prev.length - 1].time) + 1}`, value: Math.floor(Math.random() * (1200 - 800 + 1) + 800) }]);
-    setErrorRate((prev) => [...prev.slice(1), { time: `${parseInt(prev[prev.length - 1].time) + 1}`, value: Math.random() * 2 }]);
+    if (!isMounted) return;
+    setRequestRate((prev) => [...prev.slice(1), { time: `${parseInt(prev[prev.length - 1]?.time ?? '0') + 1}`, value: Math.floor(Math.random() * (1200 - 800 + 1) + 800) }]);
+    setErrorRate((prev) => [...prev.slice(1), { time: `${parseInt(prev[prev.length - 1]?.time ?? '0') + 1}`, value: Math.random() * 2 }]);
     setLatency(Math.floor(Math.random() * (250 - 50 + 1) + 50));
     setServers(prev => prev.map(s => s.status === 'offline' ? s : ({...s, cpuUsage: Math.min(99, s.cpuUsage + Math.floor(Math.random() * 5) - 2), memoryUsage: Math.min(99, s.memoryUsage + Math.floor(Math.random() * 4) - 2) })));
   }, 2000);
@@ -49,6 +58,29 @@ export default function DashboardPage() {
   const currentRequestRate = requestRate[requestRate.length - 1]?.value ?? 0;
   const currentErrorRate = errorRate[errorRate.length - 1]?.value ?? 0;
   
+  if (!isMounted) {
+    return (
+        <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
+            <div className="xl:col-span-3 grid gap-4 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+               <Skeleton className="h-[126px]" />
+               <Skeleton className="h-[126px]" />
+               <Skeleton className="h-[126px]" />
+               <Skeleton className="h-[126px]" />
+            </div>
+            <div className="xl:col-span-3 grid gap-4 md:gap-8 grid-cols-1 lg:grid-cols-2">
+                <Skeleton className="h-[314px]" />
+                <Skeleton className="h-[314px]" />
+            </div>
+            <div className="xl:col-span-3">
+                <Skeleton className="h-[354px]" />
+            </div>
+             <div className="xl:col-span-3">
+                <Skeleton className="h-[270px]" />
+            </div>
+        </div>
+    )
+  }
+
   return (
     <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
         <div className="xl:col-span-3 grid gap-4 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
