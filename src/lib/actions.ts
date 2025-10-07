@@ -38,3 +38,48 @@ export async function handleAnalyzeSession(prevState: AnalyzeState, formData: Fo
     return { error: 'Failed to analyze session due to a server error. Please try again.' };
   }
 }
+
+const CheckWebsiteSchema = z.object({
+  url: z.string().url({ message: 'Please enter a valid URL.' }),
+});
+
+export type CheckWebsiteState = {
+  result?: {
+    status: 'Operational' | 'Down' | 'Error';
+    responseTime: number;
+    url: string;
+  };
+  error?: string;
+}
+
+export async function handleCheckExternalWebsite(prevState: CheckWebsiteState, formData: FormData): Promise<CheckWebsiteState> {
+    const validatedFields = CheckWebsiteSchema.safeParse({
+        url: formData.get('url'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            error: validatedFields.error.flatten().fieldErrors.url?.[0],
+        };
+    }
+
+    const { url } = validatedFields.data;
+    const startTime = Date.now();
+
+    try {
+        const response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(5000) });
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+
+        if (response.ok) {
+            return { result: { status: 'Operational', responseTime, url } };
+        } else {
+            return { result: { status: 'Down', responseTime, url } };
+        }
+    } catch (e: any) {
+        if (e.name === 'TimeoutError') {
+             return { error: 'The request timed out.' };
+        }
+        return { error: 'Failed to fetch the website. Please check the URL and your network connection.' };
+    }
+}

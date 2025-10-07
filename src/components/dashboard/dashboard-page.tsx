@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useInterval } from "@/hooks/use-interval";
@@ -9,6 +10,7 @@ import { ServerStatus } from "./server-status";
 import { AlertList } from "./alert-list";
 import { HealthCheckCard } from "./health-check-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExternalHealthCheckCard } from "./external-health-check-card";
 
 const initialServers: Server[] = [
   { id: 'srv-1', name: 'web-1-us-east', ip: '192.168.1.10', region: 'us-east-1', status: 'online', cpuUsage: 34, memoryUsage: 58 },
@@ -33,6 +35,7 @@ export default function DashboardPage() {
   const [servers, setServers] = useState<Server[]>(initialServers);
 
   useEffect(() => {
+    setIsMounted(true);
     const initialRequestData = Array.from({ length: 20 }, (_, i) => ({
         time: `${i}`,
         value: Math.floor(Math.random() * (1200 - 800 + 1) + 800),
@@ -44,7 +47,6 @@ export default function DashboardPage() {
     setRequestRate(initialRequestData);
     setErrorRate(initialErrorData);
     setLatency(Math.floor(Math.random() * (250 - 50 + 1) + 50));
-    setIsMounted(true);
   }, []);
 
   useInterval(() => {
@@ -93,6 +95,10 @@ export default function DashboardPage() {
         <div className="xl:col-span-3 grid gap-4 md:gap-8 grid-cols-1 lg:grid-cols-2">
             <ChartCard title="Request Rate" description="Live requests per minute over the last minute." chartData={requestRate} dataKey="value" chartType="line" />
             <ChartCard title="Error Rate (%)" description="Live error rate over the last minute." chartData={errorRate} dataKey="value" chartType="bar" color="var(--color-destructive)" />
+        </div>
+        
+        <div className="lg:col-span-2 xl:col-span-3">
+            <ExternalHealthCheckCard />
         </div>
 
         <div className="xl:col-span-3">
