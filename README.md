@@ -18,7 +18,7 @@ LoadPilot is a modern, real-time dashboard for monitoring and managing web traff
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Generative AI**: [Google Genkit](https://firebase.google.com/docs/genkit)
 - **Containerization**: [Docker](https://www.docker.com/)
-
+- **Load balancing**: [AWS EC2]
 ## 🏁 Getting Started
 
 To get a local copy up and running, follow these simple steps.
