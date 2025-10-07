@@ -5,7 +5,8 @@ import * as Icons from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { TimeSeriesData } from "@/lib/types"
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import type { ChartConfig } from "@/components/ui/chart"
 
 type MetricCardProps = {
   title: string
@@ -42,8 +43,14 @@ type ChartCardProps = {
 }
 
 export function ChartCard({ title, description, chartData, dataKey, chartType, color }: ChartCardProps) {
-    const ChartComponent = chartType === 'line' ? LineChart : BarChart;
-    const pathColor = color || 'var(--color-primary)';
+    const Chart = chartType === 'line' ? LineChart : BarChart;
+    const pathColor = color || 'hsl(var(--primary))';
+    const chartConfig = {
+      [dataKey]: {
+        label: title,
+        color: pathColor,
+      },
+    } satisfies ChartConfig
 
     return (
         <Card>
@@ -52,21 +59,29 @@ export function ChartCard({ title, description, chartData, dataKey, chartType, c
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <ChartComponent data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                        <XAxis dataKey="time" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} tickLine={false} axisLine={false} />
-                        <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} tickLine={false} axisLine={false} />
-                        <Tooltip cursor={{fill: 'hsl(var(--accent) / 0.1)'}} content={<ChartTooltipContent />} />
-                        {chartType === 'line' ? (
-                            <Line type="monotone" dataKey={dataKey} stroke={pathColor} strokeWidth={2} dot={false} />
-                        ) : (
-                            <Bar dataKey={dataKey} fill={pathColor} radius={[4, 4, 0, 0]} />
-                        )}
-                    </ChartComponent>
-                </ResponsiveContainer>
-                </div>
+                <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                    <ResponsiveContainer>
+                        <Chart accessibilityLayer data={chartData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                                dataKey="time"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                tickFormatter={(value) => value.slice(0, 3)}
+                            />
+                            <ChartTooltip
+                                cursor={false}
+                                content={<ChartTooltipContent />}
+                            />
+                            {chartType === 'line' ? (
+                                <Line dataKey={dataKey} type="natural" stroke={`var(--color-${dataKey as string})`} strokeWidth={2} dot={false} />
+                            ) : (
+                                <Bar dataKey={dataKey} fill={`var(--color-${dataKey as string})`} radius={4} />
+                            )}
+                        </Chart>
+                    </ResponsiveContainer>
+                </ChartContainer>
             </CardContent>
         </Card>
     )
